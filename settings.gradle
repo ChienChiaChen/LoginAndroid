@@ -1,1 +1,2 @@
-include ':app'
+include ':app', ':LoginPresenterAndroid'
+project(':LoginPresenterAndroid').projectDir = new File('app/libs/LoginPresenterAndroid')

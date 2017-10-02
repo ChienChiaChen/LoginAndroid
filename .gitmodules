@@ -1,0 +1,3 @@
+[submodule "app/libs/LoginPresenterAndroid"]
+	path = app/libs/LoginPresenterAndroid
+	url = git@github.com:ChienChiaChen/LoginPresenterAndroid.git
