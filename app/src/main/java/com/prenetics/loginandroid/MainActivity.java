@@ -1,18 +1,21 @@
 package com.prenetics.loginandroid;
 
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
+import com.prenetics.loginpresenterandroid.model.data.request.LoginData;
 import com.prenetics.loginpresenterandroid.presenter.ILoginMvpPresenter;
 import com.prenetics.loginpresenterandroid.presenter.LoginPresenter;
 import com.prenetics.loginpresenterandroid.view.ILoginMvpView;
 
 public class MainActivity extends AppCompatActivity implements ILoginMvpView, View.OnClickListener,View.OnFocusChangeListener {
-    private EditText editUser;
-    private EditText editPass;
+    private EditText editAccount;
+    private EditText editPwd;
     private View btnLogin;
     private View editUserBg;
     private View editPassBg;
@@ -54,8 +57,8 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView, Vi
 
     @Override
     public void findView() {
-        editUser =(EditText) findViewById(R.id.login_username);
-        editPass = (EditText) findViewById(R.id.login_password);
+        editAccount =(EditText) findViewById(R.id.login_username);
+        editPwd = (EditText) findViewById(R.id.login_password);
         btnLogin = findViewById(R.id.login_submit);
         progressBar = (ProgressBar) findViewById(R.id.login_progressbar);
         editUserBg = findViewById(R.id.login_username_background);
@@ -65,18 +68,16 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView, Vi
     @Override
     public void setListener() {
         btnLogin.setOnClickListener(this);
-        editUser.setOnFocusChangeListener(this);
-        editPass.setOnFocusChangeListener(this);
+        editAccount.setOnFocusChangeListener(this);
+        editPwd.setOnFocusChangeListener(this);
         btnLogin.setOnFocusChangeListener(this);
     }
 
-    @Override
     public void showWaitingCursor() {
         if (null == progressBar) return;
         progressBar.setVisibility(View.VISIBLE);
     }
 
-    @Override
     public void hideWaitingCursor() {
         if (null == progressBar) return;
         progressBar.setVisibility(View.GONE);
@@ -86,7 +87,12 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView, Vi
     public void onClick(View view) {
         switch (view.getId()){
             case R.id.login_submit: {
-                mLoginMvpPresenter.onLogin();
+                mLoginMvpPresenter.onLogin(new LoginData.Builder()
+                                    .setAccount(editAccount.getText().toString())
+                                    .setPassword(editPwd.getText().toString())
+                                    .setUid(Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID))
+                                    .setProduct("fitlifee")
+                                    .build());
                 break;
             }
         }
@@ -109,9 +115,31 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView, Vi
     }
 
     @Override
-    public void clearFocus() {
-        editPass.clearFocus();
-        editUser.clearFocus();
+    public void startLogin() {
+        editPwd.clearFocus();
+        editAccount.clearFocus();
         btnLogin.requestFocus();
+        showWaitingCursor();
+    }
+
+    @Override
+    public void endLogin() {
+        hideWaitingCursor();
+    }
+
+    @Override
+    public void onLoginSuccess() {
+        hideWaitingCursor();
+        showToast("Success");
+    }
+
+    @Override
+    public void onLoginFail() {
+        hideWaitingCursor();
+        showToast("Fail");
+    }
+
+    public void showToast(String toast){
+        Toast.makeText(this, toast, Toast.LENGTH_SHORT).show();
     }
 }
