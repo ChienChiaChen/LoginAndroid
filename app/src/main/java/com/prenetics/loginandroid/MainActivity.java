@@ -11,15 +11,17 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.prenetics.loginpresenterandroid.model.data.request.LoginData;
+import com.prenetics.loginpresenterandroid.networks.BaseUrl;
 import com.prenetics.loginpresenterandroid.presenter.ILoginMvpPresenter;
 import com.prenetics.loginpresenterandroid.presenter.LoginPresenter;
+import com.prenetics.loginpresenterandroid.utils.LoginUtils;
 import com.prenetics.loginpresenterandroid.view.ILoginMvpView;
 
 public class MainActivity extends AppCompatActivity implements ILoginMvpView {
     private ILoginMvpPresenter mLoginMvpPresenter;
     private EditText editAccount;
     private EditText editPwd;
-    private View btnLogin;
+    private View btnLogin, btnLogout;
     private View editUserBg;
     private View editPassBg;
     private ProgressBar progressBar;
@@ -30,10 +32,23 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView {
             switch (view.getId()) {
                 case R.id.login_submit: {
                     if (null == editPwd || null == editAccount || TextUtils.isEmpty(editPwd.getText().toString()) || TextUtils.isEmpty(editAccount.getText().toString())) {
+                        showToast("Input Error");
                         break;
                     }
-                    mLoginMvpPresenter.onLogin(new LoginData(editAccount.getText().toString(),editPwd.getText().toString(),
-                                    Settings.Secure.getString(getApplicationContext().getContentResolver(), Settings.Secure.ANDROID_ID),"fitlife"));
+
+                    mLoginMvpPresenter.login(new LoginData.Builder(
+                                    Globals.getInstance(),
+                                    editAccount.getText().toString(),
+                                    editPwd.getText().toString(),
+                                    Settings.Secure.getString(Globals.getInstance().getContentResolver(), Settings.Secure.ANDROID_ID),
+                                    "fitlife",
+                                    BaseUrl.PRODUCTION).build());
+                    break;
+                }
+
+                case R.id.logout_submit: {
+                    LoginUtils.clearLoginData(Globals.getInstance());
+                    setupLoginForm();
                     break;
                 }
             }
@@ -70,6 +85,7 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView {
         editAccount =(EditText) findViewById(R.id.login_username);
         editPwd = (EditText) findViewById(R.id.login_password);
         btnLogin = findViewById(R.id.login_submit);
+        btnLogout = findViewById(R.id.logout_submit);
         progressBar = (ProgressBar) findViewById(R.id.login_progressbar);
         editUserBg = findViewById(R.id.login_username_background);
         editPassBg = findViewById(R.id.login_password_background);
@@ -77,6 +93,8 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView {
         editAccount.setOnFocusChangeListener(mFocusChangeListener);
         editPwd.setOnFocusChangeListener(mFocusChangeListener);
         btnLogin.setOnClickListener(mClickListener);
+        btnLogout.setOnClickListener(mClickListener);
+        setupLoginForm();
     }
 
     protected void onDestroy() {
@@ -112,11 +130,23 @@ public class MainActivity extends AppCompatActivity implements ILoginMvpView {
     public void navigateToHome() {
         hideWaitingCursor();
         showToast("Login Success");
+        setupLoginForm();
     }
 
     @Override
     public void loginFailed() {
+        setupLoginForm();
         hideWaitingCursor();
         showToast("Login failed");
+    }
+
+    private void setupLoginForm() {
+        if (LoginUtils.isLogin(Globals.getInstance())) {
+            findViewById(R.id.login_form).setVisibility(View.INVISIBLE);
+            btnLogout.setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.login_form).setVisibility(View.VISIBLE);
+            btnLogout.setVisibility(View.INVISIBLE);
+        }
     }
 }
